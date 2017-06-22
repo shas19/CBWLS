@@ -23,11 +23,12 @@ private:
 	int block_size;
 	int N; //number of blocks
 	int height;
+	int s0;
 
-	vector <int64> Y[3],M[3],C[3],S[3];
+	vector <int64> Y[3],M[3],C[3],S[3],ND[3],SND[3];
 
 	//change this one later	
-	vector <int64> data;
+	vector < vector <bool> > data[3];
 
 public:
 	//gives the class of the node 
@@ -44,6 +45,39 @@ public:
 			return 0;
 		else
 			return 1;
+	}
+
+	void set_data(int id,int val)
+	{
+		int clas = get_class(id);
+		int cur_height = (int)log2(id);
+		
+		int M1 = M[clas][cur_height];
+
+		// cout<<"A"<<val << ' ' << M1 << ' '<<clas<<' '<<cur_height << endl;
+
+		for(int i=M1*(id-SND[clas][cur_height]); i<M1*(id-SND[clas][cur_height]+1); i++)
+			{
+				// cout<<i<<"AA"<<endl;
+				data[clas][cur_height][i] = val%2;
+				val /= 2; 
+			}
+	}		
+
+	int get_data(int id)
+	{
+		int clas = get_class(id);
+		int cur_height = (int)log2(id);
+		
+		int M1 = M[clas][cur_height];
+		int val = 0;
+
+		for(int i=M1*(id-SND[clas][cur_height]+1)-1; i>=M1*(id-SND[clas][cur_height]); i--)
+			{
+				val *= 2; 
+				val += data[clas][cur_height][i];
+			}
+		return val;
 	}
 
 	cbwls(int __n, int __sig)
@@ -64,12 +98,18 @@ public:
 			M[i].resize(height+1);
 			C[i].resize(height+1);
 			S[i].resize(height+1);
+			ND[i].resize(height+1);
+			SND[i].resize(height+1);
+			data[i].resize(height+1);
 		}	
 
 		for(int i=N; i>=1; i--)
 		{
 			clas = get_class(i);
 			cur_height = (int)log2(i);
+
+			ND[clas][cur_height]++;
+			SND[clas][cur_height] = i;
 
 			if(Y[clas][cur_height]!=0) continue;
 
@@ -90,17 +130,20 @@ public:
 			S[clas][cur_height] = (X+C[clas][cur_height]-1)/C[clas][cur_height];
 		}
 
-		//something must be done with the spill of 1!
-	}
+		for(int i=0; i<=height; i++)
+			for(int j=0; j<3; j++)
+				data[j][i].resize(M[j][i]*ND[j][i]);
+	}	
 
 	~cbwls() {};
 
 	void encode(vector <int>& A)
 	{	
-		data.resize(N+1);
+		
 		vector <int> x(N+1),y(N+1),s(N+1);
 		int cur_height;
 		int clas;
+
 
 		for(int i=N; i>=1; i--)
 		{		
@@ -116,13 +159,19 @@ public:
 			y[i] = (2*i<=N ? s[2*i] : 0) + 
 				(2*i+1<=N ? S[get_class(2*i)][cur_height+1]*s[2*i+1] : 0);
 
-			data[i] = (x[i]%C[clas][cur_height]) + y[i]*C[clas][cur_height];	
+			set_data(i, (x[i]%C[clas][cur_height]) + y[i]*C[clas][cur_height]);	
+			
+			// if(get_data(i) != (x[i]%C[clas][cur_height]) + y[i]*C[clas][cur_height])
+			// 	{
+			// 		cout<<"stfu..!!"<<' '<<get_data(i)<<' '<<(x[i]%C[clas][cur_height]) + y[i]*C[clas][cur_height]<<endl;
+			// 		return;
+			// 	}	
+
+
 			s[i] = x[i]/C[clas][cur_height];
 		}
 
-		// cout<<s[3]<<endl;
-
-		data[0] = s[1]; 
+		s0 = s[1]; 
 	}	
 
 //to access
@@ -134,10 +183,10 @@ public:
 
 		int yd;
 
-		if(j == 1) yd = data[0];
+		if(j == 1) yd = s0;
 		else
 		{	
-			yd  = (data[j/2]/C[get_class(j/2)][cur_height-1]);
+			yd  = (get_data(j/2)/C[get_class(j/2)][cur_height-1]);
 
 			if(j%2==1)
 				yd /= S[clas][cur_height];
@@ -145,13 +194,11 @@ public:
 				yd %= S[get_class(j-1)][cur_height];
 		}
 
-		int64 temp = data[j]%C[clas][cur_height] + 
+		int64 temp = get_data(j)%C[clas][cur_height] + 
 			C[clas][cur_height]*yd;
-			
+		
 		int u = ( (j<N-1 ? block_size : n%block_size) -1-(index%block_size));
-		
-		// cout<<temp<<' '<<yd<<' '<<C[clas][cur_height]<<endl;
-		
+				
 		for(int i=0; i<u; i++)
 			temp /= sig;
 
@@ -164,7 +211,7 @@ public:
 
 int main() 
 {
-	int n = 100;  
+	int n = 10008;  
 	int sig = 3;
 
 	cbwls Ac(n,sig);
@@ -176,7 +223,7 @@ int main()
 	Ac.encode(A);
 
 	//test by accessing Ac and see if it matches with A	
-	for(int i=0;i<30;i++)
+	for(int i=0;i<300;i++)
 		cout<<A[i]<<' '<<Ac[i]<<endl;
 	return 0;
 
