@@ -34,7 +34,7 @@ public:
 
 		block_size = 1+(int)(log2(n)/log2(sig));
 		X = (int64) pow(sig,block_size);
-		N = n/block_size;
+		N = (n+block_size-1)/block_size;  //number of blocks
 		sqX = (int)sqrt(X);
 		total_bits = 0;
 		total_redundancy = 0;
@@ -92,7 +92,7 @@ public:
 		for(int i=0;i<N+1;i++)
 		{		
 		if(i<N)	
-			for(int j=0; j<block_size; j++)
+			for(int j=0; j<block_size && i*block_size+j<n; j++)
 			{
 				x[i] *= sig;
 				x[i] += A[i*block_size+j];
@@ -111,7 +111,7 @@ public:
 		int64 temp = data[j]%C[j] + C[j]*(data[j+1]/C[j+1]);
 
 			
-		int u = (block_size-1-(index%block_size));
+		int u = ( (j<N-1 ? block_size : n%block_size) -1-(index%block_size));
 		// cout<<temp<<' '<<u<<endl;
 		
 		for(int i=0; i<u; i++)
@@ -125,7 +125,7 @@ public:
 
 int main() 
 {
-	int n = 10008;
+	int n = 10008;  
 	int sig = 3;
 
 	cbwls Ac(n,sig);
