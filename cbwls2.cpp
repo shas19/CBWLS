@@ -119,6 +119,10 @@ public:
 			data[i] = (x[i]%C[clas][cur_height]) + y[i]*C[clas][cur_height];	
 			s[i] = x[i]/C[clas][cur_height];
 		}
+
+		// cout<<s[3]<<endl;
+
+		data[0] = s[1]; 
 	}	
 
 //to access
@@ -128,23 +132,29 @@ public:
 		int cur_height = (int)log2(j);	
 		int clas = get_class(j);	
 
-		//won't work for 1
-		int yd = (data[j/2]/C[get_class(j/2)][height-1]);
+		int yd;
 
-		if(j%2==0)
-			yd /= S[clas][cur_height];
+		if(j == 1) yd = data[0];
 		else
-			yd %= S[get_class(j-1)][cur_height];
+		{	
+			yd  = (data[j/2]/C[get_class(j/2)][cur_height-1]);
+
+			if(j%2==1)
+				yd /= S[clas][cur_height];
+			else
+				yd %= S[get_class(j-1)][cur_height];
+		}
 
 		int64 temp = data[j]%C[clas][cur_height] + 
 			C[clas][cur_height]*yd;
 			
 		int u = ( (j<N-1 ? block_size : n%block_size) -1-(index%block_size));
-		// cout<<temp<<' '<<u<<endl;
+		
+		// cout<<temp<<' '<<yd<<' '<<C[clas][cur_height]<<endl;
 		
 		for(int i=0; i<u; i++)
 			temp /= sig;
-		
+
 		return temp%sig;
 	}
 //to update
@@ -154,7 +164,7 @@ public:
 
 int main() 
 {
-	int n = 100001;  
+	int n = 100;  
 	int sig = 3;
 
 	cbwls Ac(n,sig);
@@ -165,9 +175,8 @@ int main()
 		A[i] = rand()%sig;
 	Ac.encode(A);
 
-
 	//test by accessing Ac and see if it matches with A	
-	for(int i=30;i<60;i++)
+	for(int i=0;i<30;i++)
 		cout<<A[i]<<' '<<Ac[i]<<endl;
 	return 0;
 
