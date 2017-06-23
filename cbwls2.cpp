@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h> 
+#include <time.h>
 typedef long long int64;  
 
 using namespace std;
@@ -25,12 +26,34 @@ private:
 	int height;
 	int s0;
 
-	vector <int64> Y[3],M[3],C[3],S[3],ND[3],SND[3];
+	vector <int> M[3],C[3],S[3],SND[3]; //SND is the starting node for that class
 
 	//change this one later	
 	vector < vector <bool> > data[3];
 
 public:
+
+	int get_memory()
+	{	
+		int ans1 = 0,ans = s0;
+		for(int i=0;i<3;i++)
+		{
+			ans1 += M[i].size()*32;
+			ans1 += C[i].size()*32;
+			ans1 += S[i].size()*32;
+			ans1 += SND[i].size()*32;
+
+			// cout << data[i].size() << endl;
+
+			for(int j=0;j<data[i].size();j++)
+				ans += data[i][j].size();
+
+		}
+
+			cout << ans1 << ' ' << ans << endl;
+			return ans + ans1;	
+	}
+
 	//gives the class of the node 
 	int get_class(int i)
 	{	
@@ -84,14 +107,18 @@ public:
 	{
 		n = __n;
 		sig = __sig;
+	
 		block_size = 1+(int)(log2(n)/log2(sig));
 		N = (n+block_size-1)/block_size;  //number of blocks
 		int64 X = (int64) pow(sig,block_size);
 		int64 sqX = (int)sqrt(X);
 		height = (int)log2(N);  //need to be optimized at the query time!!
+		
+
 		int cur_height;
 		int clas;
-		
+		vector <int> Y[3],ND[3];	
+
 		for(int i=0;i<3;i++)
 		{	
 			Y[i].resize(height+1);
@@ -221,10 +248,26 @@ int main()
 	for(int i=0; i<n; i++)
 		A[i] = rand()%sig;
 	Ac.encode(A);
-
 	//test by accessing Ac and see if it matches with A	
-	for(int i=0;i<300;i++)
-		cout<<A[i]<<' '<<Ac[i]<<endl;
-	return 0;
+	time_t start,end;
+
+	// cout<<(n*log2(sig)+1)<<endl;
+	// cout<<Ac.get_memory()<<endl;
+
+	start = clock();	
+
+	int lol;
+
+
+	for(int i=0;i<10008;i++)
+		{
+			lol = Ac[i];
+			if(lol != A[i])
+				cout <<i<< " stfu...!!" << endl;
+		}
+			
+	end = clock();
+
+	// cout<<(double)(end-start)/CLOCKS_PER_SEC<<endl;
 
 }
