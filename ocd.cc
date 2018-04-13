@@ -1,6 +1,5 @@
-#include <iostream>
-#include <cstdio>
-
+#include <bits/stdc++.h>
+using namespace std;
 // use n+2*w bits
 // b = 16 bits  
 
@@ -9,78 +8,19 @@ int A[MAX];
 const int b = 16;
 const int b2 = 32;
 
-//for now OCD works only if n is divisible by 2b
-class OCD
-{
-	int n;
-	D1* A;
-	D2* B;
-
-	OCD(int __n)
-	{
-		n = n;
-		A = new D1((n/b2)*b2);
-		B = new D2(n%b2); //do not test D2 for now
-	}
-
-	void insert(int s)
-	{
-		int p,q;
-		p = s/b2+1;
-		q = s%b2;
-
-		int t = A->read(p);
-		t = t|(1<<q);
-
-		A->write(p,t);
-	}
-
-	void remove(int s)
-	{	
-		int p,q;
-		p = s/b2+1;
-		q = s%b2;
-
-		int t = A->read(p);
-		t = t|(~(1<<q));
-
-		A->write(p,t);
-
-	}
-
-	bool contains(int s)
-	{	
-		int p,q;
-		p = s/b2+1;
-		q = s%b2;
-
-		int t = A->read(p);
-		if(t&(1<<q))
-			return true;
-		else
-			return false;
-	}
-
-	int choice(int s)
-	{
-		int nz = nonzero();
-		if(nz == 0)
-			return 0;
-		
-		return (nz-1)*b2 + fnz(nz);
-	}
-}
-
 
 class D1
 {	
 	int N;
 	int k;
 
+public:
 	D1(int __n)
 	{
 		N = __n/32;
 		k = N;
+
+		// cout << N << ' ' << k <<' ' <<__n<< endl;
 	}
 
 	int uh(int x)
@@ -112,7 +52,7 @@ class D1
 	{
 		int t = uh(A[s]);
 
-		if( ((1<=s and s<=K and K < t and t <= n) or (1 <= t and t <= K and k<s and s<=N)) 
+		if( ((1<=s and s<=k and k < t and t <= N) or (1 <= t and t <= k and k<s and s<=N)) 
 			and uh(A[t]) == s)
 			return t;
 		else
@@ -141,12 +81,24 @@ class D1
 			A[i] = x;
 			int j = mate(i);
 			if(i!=j)
-				setu(j,j);
+				seth(j,j);
 		}	
 	}
 
+	int fnz(int s)
+	{	
+		// cout << s<<' ' << read(s) << endl;
+		int u = read(s);
+
+		for(int i=0;i<32;i++) 
+			if(u&(1<<i))
+				return i;
+		return 0;	
+	}
+
 	int nonzero()
-	{
+	{	
+		// cout <<"L "<< k << endl;
 		if(k == N) 
 			return 0;
 		else 
@@ -169,8 +121,8 @@ class D1
 
 				if(i!= kd)
 				{
-					setu(id,kd);
-					setu(kd,id);
+					seth(id,kd);
+					seth(kd,id);
 					setl(kd,lh(A[i]));
 				}	
 			}
@@ -184,8 +136,8 @@ class D1
 				int kd = mate(k+1);
 				int v = read(kd);
 				k = k+1;
-				setu(id,kd);
-				setu(kd,id);
+				seth(id,kd);
+				seth(kd,id);
 
 				if(kd!=i) 
 					simple_write(kd,v);
@@ -194,7 +146,7 @@ class D1
 
 	}
 
-}
+};
 
 
 class D2
@@ -202,6 +154,7 @@ class D2
 	int sz;
 	vector <bool> A;
 
+public:
 	D2(int __sz)
 	{
 		sz = __sz;
@@ -217,6 +170,7 @@ class D2
 	{
 		A[s-1] = 0;
 	}
+
 
 	int choice()
 	{
@@ -234,10 +188,107 @@ class D2
 		return 0;	
 	}	
 
-}
+};
+
+//for now OCD works only if n is divisible by 2b
+class OCD
+{
+	int n;
+	D1* A;
+	D2* B;
+
+public:
+	OCD(int __n)
+	{
+		n = __n;
+		A = new D1((n/b2)*b2);
+		B = new D2(n%b2); //do not test D2 for now
+	}
+
+
+	void insert(int s)
+	{
+		int p,q;
+		p = s/b2+1;
+		q = s%b2;
+
+		int t = A->read(p);
+		t = t|(1<<q);
+
+		A->write(p,t);
+	}
+
+	void remove(int s)
+	{	
+		int p,q;
+		p = s/b2+1;
+		q = s%b2;
+
+		int t = A->read(p);
+
+		// cout << "b "<<t<<endl;
+		t = t&(~(1<<q));
+		// cout << "b "<<t<<endl;
+
+		A->write(p,t);
+
+	}
+
+	bool contains(int s)
+	{	
+		int p,q;
+		p = s/b2+1;
+		q = s%b2;
+
+		int t = A->read(p);
+		if(t&(1<<q))
+			return true;
+		else
+			return false;
+	}
+
+	int choice()
+	{
+		int nz = A->nonzero();
+		// cout << nz << endl;
+		if(nz == 0)
+			return 0;
+		
+		return (nz-1)*b2 + A->fnz(nz);
+	}
+};
+
+
 
 int main()
 {
-		
+	OCD* A;
+	int n = 64;
+	A = new OCD(n);
+
+	//test 
+
+	A->insert(10);
+	A->remove(10);
+	A->insert(5);
+	A->insert(7);
+
+	cout << A->contains(5) << endl;
+	cout << A->contains(7) << endl;
+	cout << A->contains(8) << endl;
+	cout << A->contains(9) << endl;
+	cout << A->choice() << endl;
+
+
+	A->insert(62);
+	A->insert(33);
+	A->insert(35);
+
+	cout << A->contains(62) << endl;
+	cout << A->contains(33) << endl;
+	cout << A->contains(35) << endl;
+	cout << A->contains(37) << endl;
+	cout << A->choice() << endl;
+
 
 }
